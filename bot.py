@@ -106,16 +106,22 @@ async def chat(data: dict = Body(...)):
 # 📄 RESUME GENERATOR
 # -------------------------------
 @app.post("/generate-resume")
-async def generate_resume(data: dict):
+async def generate_resume(data: dict = Body(...)):
+    name = data.get("name", "")
+    skills = data.get("skills", "")
+    experience = data.get("experience", "")
+    education = data.get("education", "")
+
+    if not name:
+        return {"error": "Name is required"}
+
     prompt = f"""
     Create a professional ATS-friendly resume.
 
-    Name: {data['name']}
-    Skills: {data['skills']}
-    Experience: {data['experience']}
-    Education: {data['education']}
-
-    Format properly with sections.
+    Name: {name}
+    Skills: {skills}
+    Experience: {experience}
+    Education: {education}
     """
 
     response = client.models.generate_content(
