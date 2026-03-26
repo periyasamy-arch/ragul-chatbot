@@ -156,10 +156,10 @@ async function generateResume() {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
-      name: name.value,
-      skills: skills.value,
-      experience: experience.value,
-      education: education.value
+        name: document.getElementById("name").value,
+        skills: document.getElementById("skills").value,
+        experience: document.getElementById("experience").value,
+        education: document.getElementById("education").value
     })
   });
   alert("Resume generated");
