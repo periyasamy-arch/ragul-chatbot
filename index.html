@@ -5,202 +5,218 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Career Assistant</title>
 
-<!-- Chart.js for Resume Score -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* 🌌 Neon & Glass UI */
 body {
-  margin:0;
-  font-family: 'Segoe UI', sans-serif;
-  background:#0a0a0a;
-  color:white;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
+  color: #333;
 }
-.app {
-  max-width: 600px;
-  margin:auto;
-  padding:20px;
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
 }
+
 h1 {
-  text-align:center;
-  color:cyan;
-  text-shadow:0 0 20px cyan;
+  text-align: center;
+  margin-bottom: 30px;
 }
+
 .card {
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  padding:15px;
-  margin:20px 0;
-  border-radius:15px;
-  box-shadow:0 0 15px rgba(0,255,255,0.3);
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
 }
+
 input, textarea {
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  background:black;
-  border:1px solid cyan;
-  color:white;
-  border-radius:8px;
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
+
 button {
-  margin-top:10px;
-  padding:10px;
-  border:none;
-  background:cyan;
-  cursor:pointer;
-  border-radius:10px;
+  padding: 10px 15px;
+  border: none;
+  background: #2c3e50;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
 }
-.chat-container {
-  border:1px solid cyan;
-  height:300px;
-  display:flex;
-  flex-direction:column;
+
+button:hover {
+  background: #1a252f;
 }
+
 #chatbox {
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
+  height: 250px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #fafafa;
 }
-.user { text-align:right; color: lightgreen; }
-.ai { text-align:left; color: cyan; }
-.input-area { display:flex; gap:5px; margin-top:5px; }
-@media(max-width:600px){ .app{ width:95%; } }
+
+.user {
+  text-align: right;
+  margin: 5px 0;
+}
+
+.ai {
+  text-align: left;
+  margin: 5px 0;
+}
+
+pre {
+  background: #f4f4f4;
+  padding: 10px;
+  overflow-x: auto;
+}
 </style>
 </head>
+
 <body>
+<div class="container">
+<h1>AI Career Assistant</h1>
 
-<div class="app">
-<h1>⚡ AI Career Assistant</h1>
-
-<!-- Chatbot -->
-<div class="card chat-container">
-  <div id="chatbox"></div>
-  <div class="input-area">
-    <input id="chatInput" placeholder="Ask anything...">
-    <button onclick="sendMessage()">➤</button>
-    <button onclick="startVoice()">🎙</button>
-  </div>
+<!-- Chat -->
+<div class="card">
+<h3>Chat</h3>
+<div id="chatbox"></div>
+<input id="chatInput" placeholder="Ask your question">
+<button onclick="sendMessage()">Send</button>
 </div>
 
 <!-- Resume Generator -->
 <div class="card">
-  <h2>📄 Generate Resume</h2>
-  <input id="name" placeholder="Name">
-  <input id="skills" placeholder="Skills (comma separated)">
-  <input id="experience" placeholder="Experience">
-  <input id="education" placeholder="Education">
-  <button onclick="generateResume()">Generate</button>
-  <button onclick="downloadResume()">Download</button>
+<h3>Generate Resume</h3>
+<input id="name" placeholder="Name">
+<input id="skills" placeholder="Skills">
+<input id="experience" placeholder="Experience">
+<input id="education" placeholder="Education">
+<button onclick="generateResume()">Generate Resume</button>
+<button onclick="downloadResume()">Download</button>
 </div>
 
-<!-- Upload Resume -->
+<!-- Upload -->
 <div class="card">
-  <h2>📤 Upload Resume</h2>
-  <input type="file" id="file">
-  <button onclick="uploadResume()">Analyze</button>
-</div>
-
-<!-- Resume Score Dashboard -->
-<div class="card">
-  <h2>📊 Resume Score</h2>
-  <canvas id="chart"></canvas>
-</div>
-
+<h3>Analyze Resume</h3>
+<input type="file" id="file">
+<button onclick="uploadResume()">Analyze</button>
 <pre id="result"></pre>
 </div>
 
-<script>
-// 🔗 CHANGE THIS TO YOUR BACKEND URL
-const API_URL = "https://chatbot-4j8o.onrender.com";
+<!-- Interview -->
+<div class="card">
+<h3>Interview Practice</h3>
+<input id="role" placeholder="Role (e.g Software Engineer)">
+<button onclick="startInterview()">Start Interview</button>
+<pre id="interviewOutput"></pre>
+</div>
 
-// 🤖 CHATBOT
+<!-- Chart -->
+<div class="card">
+<h3>Resume Score</h3>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script>
+const API_URL = "https://chatbot-4j8o.onrender.com"
+
+// Chat
 async function sendMessage() {
   const input = document.getElementById("chatInput").value;
+  if (!input) return;
+
   const chatbox = document.getElementById("chatbox");
-  if(!input) return;
-  chatbox.innerHTML += `<p class="user">You: ${input}</p>`;
-  try{
-    const res = await fetch(`${API_URL}/chat`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({message: input, user_id:"user1"})
-    });
-    const data = await res.json();
-    typeEffect(chatbox, data.reply);
-    document.getElementById("chatInput").value="";
-  } catch(err){
-    chatbox.innerHTML += `<p style="color:red;">Error connecting to backend</p>`;
-    console.error(err);
-  }
+  chatbox.innerHTML += `<div class="user">${input}</div>`;
+
+  const res = await fetch(`${API_URL}/chat`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({message: input, user_id: "user1"})
+  });
+
+  const data = await res.json();
+  chatbox.innerHTML += `<div class="ai">${data.reply}</div>`;
 }
 
-// Typing effect for AI
-function typeEffect(chatbox, text){
-  let i=0;
-  const p=document.createElement("p");
-  p.className="ai";
-  chatbox.appendChild(p);
-  const interval = setInterval(()=>{
-    p.innerHTML += text.charAt(i);
-    i++;
-    if(i>=text.length) clearInterval(interval);
-    chatbox.scrollTop = chatbox.scrollHeight;
-  },20);
+// Resume
+async function generateResume() {
+  await fetch(`${API_URL}/generate-resume`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      name: name.value,
+      skills: skills.value,
+      experience: experience.value,
+      education: education.value
+    })
+  });
+  alert("Resume generated");
 }
 
-// 📄 Generate Resume
-async function generateResume(){
-  try{
-    await fetch(`${API_URL}/generate-resume`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        name: name.value,
-        skills: skills.value,
-        experience: experience.value,
-        education: education.value
-      })
-    });
-    alert("Resume Generated!");
-  }catch(err){ console.error(err); }
-}
-
-// 📥 Download Resume
-function downloadResume(){
+function downloadResume() {
   window.open(`${API_URL}/download`);
 }
 
-// 📤 Upload Resume
-async function uploadResume(){
+// Upload
+async function uploadResume() {
   const fileInput = document.getElementById("file");
-  if(fileInput.files.length===0) return alert("Select a file!");
   const formData = new FormData();
   formData.append("file", fileInput.files[0]);
-  try{
-    const res = await fetch(`${API_URL}/upload-resume`, {method:"POST", body: formData});
-    const data = await res.json();
-    document.getElementById("result").innerText = data.analysis;
-    try{ showChart(JSON.parse(data.analysis)); }catch{}
-  }catch(err){ console.error(err); }
+
+  const res = await fetch(`${API_URL}/upload-resume`, {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  document.getElementById("result").innerText = data.analysis;
+
+  try {
+    const parsed = JSON.parse(data.analysis);
+    showChart(parsed);
+  } catch {}
 }
 
-// 📊 Show Chart
-function showChart(data){
-  const ctx = document.getElementById("chart");
-  new Chart(ctx,{type:"bar",data:{labels:["Skills","Experience","Formatting"],datasets:[{data:[data.skills,data.experience,data.formatting],backgroundColor:["cyan","lightgreen","magenta"]}]},options:{scales:{y:{beginAtZero:true}}}});
+// Chart
+function showChart(data) {
+  new Chart(document.getElementById("chart"), {
+    type: "bar",
+    data: {
+      labels: ["Skills", "Experience", "Formatting"],
+      datasets: [{
+        label: "Score",
+        data: [data.skills, data.experience, data.formatting]
+      }]
+    }
+  });
 }
 
-// 🎙 Voice Input
-function startVoice(){
-  const recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-  recognition.lang="en-IN";
-  recognition.onresult=function(e){
-    document.getElementById("chatInput").value=e.results[0][0].transcript;
-    sendMessage();
-  };
-  recognition.start();
+// Interview
+async function startInterview() {
+  const role = document.getElementById("role").value;
+
+  const res = await fetch(`${API_URL}/interview`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({role})
+  });
+
+  const data = await res.json();
+  document.getElementById("interviewOutput").innerText = data.response;
 }
 </script>
+
 </body>
 </html>

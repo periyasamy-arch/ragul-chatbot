@@ -11,7 +11,7 @@ from docx import Document
 # -------------------------------
 # 🔑 CONFIG
 # -------------------------------
-GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+GEMINI_API_KEY = "AIzaSyBx3EO5F1cnI3yVhYlX9J5TlPu317Fep0k"
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
