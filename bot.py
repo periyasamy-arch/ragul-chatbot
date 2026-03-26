@@ -56,7 +56,13 @@ def extract_text(file_path):
 
     return text
 
-def create_pdf(content, filename="generated_resume.pdf"):
+import os
+
+def create_pdf(content):
+    os.makedirs("files", exist_ok=True)
+
+    filepath = os.path.join("files", "generated_resume.pdf")
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=11)
@@ -64,8 +70,11 @@ def create_pdf(content, filename="generated_resume.pdf"):
     for line in content.split("\n"):
         pdf.multi_cell(0, 8, line)
 
-    pdf.output(filename)
-    return filename
+    pdf.output(filepath)
+
+    print("Saved at:", filepath)  # DEBUG
+
+    return filepath
 
 # -------------------------------
 # 🤖 CHATBOT (WITH MEMORY)
@@ -108,31 +117,27 @@ async def chat(data: dict = Body(...)):
 @app.post("/generate-resume")
 async def generate_resume(data: dict = Body(...)):
     name = data.get("name", "")
-    skills = data.get("skills", "")
-    experience = data.get("experience", "")
-    education = data.get("education", "")
 
     if not name:
-        return {"error": "Name is required"}
+        return {"error": "Name required"}
 
     prompt = f"""
     Create a professional ATS-friendly resume.
 
     Name: {name}
-    Skills: {skills}
-    Experience: {experience}
-    Education: {education}
+    Skills: {data.get('skills', '')}
+    Experience: {data.get('experience', '')}
+    Education: {data.get('education', '')}
     """
 
     response = client.models.generate_content(
         model="models/gemini-flash-latest",
         contents=prompt
     )
-    content = response.text
 
-    file_path = create_pdf(content)
+    filepath = create_pdf(response.text)
 
-    return {"message": "Resume generated", "file": file_path}
+    return {"message": "Resume generated", "file": filepath}
 
 # -------------------------------
 # 📤 UPLOAD + ANALYZE RESUME
@@ -177,8 +182,13 @@ async def upload_resume(file: UploadFile = File(...)):
 # -------------------------------
 @app.get("/download")
 def download():
+    filepath = os.path.join("files", "generated_resume.pdf")
+
+    if not os.path.exists(filepath):
+        return {"error": "File not found. Generate resume first."}
+
     return FileResponse(
-        "generated_resume.pdf",
+        filepath,
         media_type="application/pdf",
         filename="resume.pdf"
     )
